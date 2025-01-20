@@ -1,15 +1,39 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: Nightly regression tests
 
 on:
   schedule:
     - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      pytest_command:
+        description: 'Custom pytest command'
+        required: true
+        default: '-m "not devRun"'
+        type: string
+      parallelism:
+        description: 'Number of machines to split tests'
+        required: false
+        default: 2
+        type: number
 
 jobs:
-  nightly:
+  setup-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          count=${{ github.event.inputs.parallelism || 2 }}
+          matrix=$(seq -s ',' 1 $count)
+          echo "matrix=$(jq -cn --argjson groups "[$matrix]" '{group: $groups}')" >> $GITHUB_OUTPUT
+
+  nightly-test:
+    needs: setup-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -22,6 +46,7 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
+          virtualenvs-path: .venv
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v4
@@ -29,50 +54,74 @@ jobs:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install Dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
-      - name: Install xvfb and fluxbox
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: xvfb fluxbox
-          version: 1.0
-      - name: install playwright browsers
+      - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-      - name: Test with pytest
+      - name: Run Tests
         run: |
           source .venv/bin/activate
-          SCREEN_WIDTH=1920
-          SCREEN_HEIGHT=1080
-          SCREEN_DEPTH=24
-          SCREEN_DPI=300
-          export GEOMETRY="${SCREEN_WIDTH}""x""${SCREEN_HEIGHT}""x""${SCREEN_DEPTH}"
-          export DISPLAY=:99.0
-          rm -f /tmp/.X*lock
-          xvfb-run --server-num=99 \
-          --listen-tcp \
-          --server-args="-screen 0 ${GEOMETRY} -fbdir /var/tmp -dpi ${SCREEN_DPI} -listen tcp -noreset -ac +extension RANDR" \
-          fluxbox -display :99.0 2&1>/dev/null &
-          exec $@
-          pytest -m "not devRun" --base-url ${{ vars.BASE_URL }}
-      - name: Store Artifacts from Failed Tests
-        if: failure()
-        uses: actions/upload-artifact@v4.3.1
-        id: artifact-upload-step
+          xvfb-run pytest ${{ github.event.inputs.pytest_command || '-m "not devRun"' }} \
+            --base-url ${{ vars.BASE_URL }} \
+            --splits ${{ github.event.inputs.parallelism || 2 }} \
+            --group ${{ matrix.group }}
+      - name: Upload test results and artifacts
+        if: always()
+        uses: actions/upload-artifact@v4.5.0
         with:
-          name: test-results
-          path: test-results/
+          name: test-results-${{ matrix.group }}
+          path: |
+            test-results/
+            allure-results
           retention-days: 7
-      - name: Add allure information
+
+  merge-reports:
+    needs: nightly-test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Merge test results
+        run: |
+          mkdir -p merged-test-results
+          for dir in artifacts/test-results-*/test-results; do
+            cp -r $dir/* merged-test-results/
+          done
+      - name: Upload Merged Test Results
+        uses: actions/upload-artifact@v4.5.0
+        id: merged-artifact-upload
+        with:
+          name: merged-test-results
+          path: merged-test-results/
+          retention-days: 7
+      - name: Merge Allure Results
+        run: |
+          mkdir -p allure-results
+          for dir in artifacts/test-results-*/allure-results; do
+            cp -r $dir/* allure-results/
+          done
+      - name: Link Git Information And Browser Version To Allure Report
         working-directory: allure-results
         if: always()
         run: |
-          echo GIT_BRANCH=${{ github.head_ref || github.ref_name }}  >> environment.properties
-          echo GIT_COMMIT_ID=${{ github.sha }} >> environment.properties
-          echo GIT_COMMIT_MESSAGE=$(git show -s --format=%s HEAD) >> environment.properties
-          echo GIT_COMMIT_AUTHOR_NAME=$(git show -s --format='%ae' HEAD) >> environment.properties
-          echo GIT_COMMIT_TIME=$(git show -s --format=%ci HEAD) >> environment.properties
-          echo CHROME_VERSION=$(google-chrome --product-version) >> environment.properties
-          echo ARTIFACT_URL=${{ steps.artifact-upload-step.outputs.artifact-url }} >> environment.properties
-      - name: Allure results
+          {
+           echo BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+           echo GIT_BRANCH=${{ github.head_ref || github.ref_name }}
+           echo GIT_COMMIT_ID=${{ github.sha }}
+           echo GIT_COMMIT_MESSAGE=$(git show -s --format=%s HEAD)
+           echo GIT_COMMIT_AUTHOR_NAME=$(git show -s --format='%ae' HEAD)
+           echo GIT_COMMIT_TIME=$(git show -s --format=%ci HEAD)
+           echo CHROME_VERSION=$(google-chrome --product-version)
+          } >> environment.properties
+      - name: Link Playwright Traces And Videos To Allure Report
+        working-directory: allure-results
+        if: contains(needs.*.result, 'failure')
+        run: echo ARTIFACT_URL=${{ steps.merged-artifact-upload.outputs.artifact-url }} >> environment.properties
+      - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
         id: allure-report
@@ -81,10 +130,9 @@ jobs:
           allure_report: allure-report
           gh_pages: gh-pages
           allure_history: allure-history
-      - name: Deploy report to Github Pages
+      - name: Deploy Report To Github Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v4
         with:
-          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: allure-history
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: allure-history

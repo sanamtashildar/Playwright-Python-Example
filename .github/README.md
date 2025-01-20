@@ -1,6 +1,7 @@
 # 🎭 Playwright Python Example 🎭
 
 ![twitter](https://img.shields.io/twitter/follow/NirTal2)
+![YouTube Channel](https://img.shields.io/youtube/channel/subscribers/UCQjS-eoKl0a1nuP_dvpLsjQ?label=YouTube%20Channel)
 ![dev run](https://github.com/nirtal85/Playwright-Python-Example/actions/workflows/devRun.yml/badge.svg)
 ![nightly](https://github.com/nirtal85/Playwright-Python-Example/actions/workflows/nightly.yml/badge.svg)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
@@ -13,29 +14,35 @@
 * [Test Automation - Maximizing Browser Window With Playwright Python And Pytest](https://www.linkedin.com/pulse/test-automation-maximizing-browser-window-playwright-nir-tal-c24hf/)
 * [Test Automation - How to Bypass Re-Login With Playwright Python And Pytest](https://www.linkedin.com/pulse/test-automation-how-bypass-re-login-playwright-python-nir-tal-cfnnf/)
 * [Test Automation - How To Perform Automated Accessibility Checks Using Playwright Python And Axe](https://www.linkedin.com/pulse/how-perform-automated-accessibility-tests-using-playwright-nir-tal-hupxf/)
+* [Test Automation - How To Link Playwright Traces and Videos to Allure Report using GitHub Actions](https://www.linkedin.com/pulse/test-automation-how-link-playwright-traces-videos-allure-nir-tal-vkm2f/)
+* [Test Automation - Speeding Up Testing with Playwright Python using Local Storage](https://www.linkedin.com/pulse/test-automation-speeding-up-testing-playwright-python-nir-tal-gmmtf/)
+* [Test Automation - Efficient Element Selection with Playwright Python using Test IDs](https://www.linkedin.com/pulse/test-automation-efficient-element-selection-playwright-nir-tal-gcbmf/)
+* [Test Automation - Flexible Test Execution with Playwright Python and GitHub Actions](https://www.linkedin.com/pulse/test-automation-flexible-execution-playwright-python-nir-tal-38xkf/)
+* [Test Automation - Accelerating Playwright Python Tests with Parallel Execution in GitHub Actions](https://www.linkedin.com/pulse/test-automation-accelerating-playwright-python-tests-parallel-nir-tal-163of/)
 
 ## 🛠️ Tech Stack
 
-| Tool                                                                     | Description                                                                                 |
-|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| [allure-pytest](https://pypi.org/project/allure-pytest/)                 | Allure reporting with your Pytest tests for better reporting                                |
-| [axe-playwright-python](https://pypi.org/project/axe-playwright-python/) | Python library for running accessibility checks with Playwright                             |
-| [playwright](https://pypi.org/project/playwright/)                       | Python library to automate the Chromium, WebKit, and Firefox browsers through a single API. |
-| [pytest](https://pypi.org/project/pytest/)                               | Popular testing framework for Python                                                        |
-| [pytest-base-url](https://pypi.org/project/pytest-base-url/)             | Pytest plugin for setting a base URL for your tests                                         |
-| [pytest-playwright](https://pypi.org/project/pytest-playwright/)         | Pytest plugin for Playwright integration for browser automation testing                     |
-| [requests](https://pypi.org/project/requests/)                           | Versatile library for making HTTP requests in Python                                        |
+| Tool                                                                     | Description                                                                                         |
+|--------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [allure-pytest](https://pypi.org/project/allure-pytest/)                 | Allure reporting with your Pytest tests for better reporting                                        |
+| [axe-playwright-python](https://pypi.org/project/axe-playwright-python/) | Python library for running accessibility checks with Playwright                                     |
+| [playwright](https://pypi.org/project/playwright/)                       | Python library to automate the Chromium, WebKit, and Firefox browsers through a single API.         |
+| [pytest](https://pypi.org/project/pytest/)                               | Popular testing framework for Python                                                                |
+| [pytest-base-url](https://pypi.org/project/pytest-base-url/)             | Pytest plugin for setting a base URL for your tests                                                 |
+| [pytest-playwright](https://pypi.org/project/pytest-playwright/)         | Pytest plugin for Playwright integration for browser automation testing                             |
+| [pytest-split](https://pypi.org/project/pytest-split/)                   | Pytest plugin which splits the test suite to equally sized sub suites based on test execution time. |
+| [requests](https://pypi.org/project/requests/)                           | Versatile library for making HTTP requests in Python                                                |
 
 ## ⚙️ Setup Instructions
 
-### Step 1: Clone the project
+### Clone the project
 
 ```bash
 git clone https://github.com/nirtal85/Playwright-Python-Example
 cd playwright-python
 ```
 
-### Step 2: Create and activate a virtual environment
+### Create and activate a virtual environment
 
 #### For Windows:
 ```bash
@@ -51,19 +58,19 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Step 3: Install Poetry
+### Install Poetry
 
 ```bash
 pip install poetry
 ```
 
-### Step 4: Install Project Dependencies
+### Install Project Dependencies
 
 ```bash
 poetry install --no-root
 ```
 
-### Step 5: Install playwright
+### Install playwright
 
 ```bash
 playwright install
@@ -130,6 +137,7 @@ pytest --help
 
 ```bash
 pre-commit install
+pre-commit install --hook-type commit-msg
 ```
 
 #### Bump Pre Commit Hooks Version

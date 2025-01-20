@@ -1,16 +1,16 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-xml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-      - id: check-toml
       - id: check-docstring-first
-      - id: check-xml
       - id: name-tests-test
       - id: file-contents-sorter
-      - id: check-json
       - id: pretty-format-json
         args: [ --autofix ]
       - id: check-ast
@@ -23,18 +23,24 @@ repos:
       - id: detect-private-key
       - id: no-commit-to-branch
         args: [ '--branch', 'main' ]
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.30.0
+    hooks:
+      - id: check-github-workflows
+        args: ["--verbose"]
+      - id: check-renovate
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: []
   - repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 24.10.0
     hooks:
       - id: black
         language_version: python3
         args: [ '--config', 'pyproject.toml' ]
-  - repo: https://github.com/PyCQA/docformatter
-    rev: v1.7.5
-    hooks:
-      - id: docformatter
-        additional_dependencies: [ tomli ]
-        args: [ --in-place ]
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.3.1
     hooks:
@@ -53,23 +59,23 @@ repos:
       - id: isort
         args: [ '--settings-file', 'pyproject.toml' ]
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.19.1
     hooks:
       - id: pyupgrade
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.3.0
     hooks:
       - id: codespell
         additional_dependencies:
           - tomli
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.16
+    rev: v0.23
     hooks:
       - id: validate-pyproject
         # Optional extra validations from SchemaStore:
         additional_dependencies: [ "validate-pyproject-schema-store[all]" ]
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-    rev: v2.13.0
+    rev: v2.14.0
     hooks:
       - id: pretty-format-toml
         exclude: poetry.lock

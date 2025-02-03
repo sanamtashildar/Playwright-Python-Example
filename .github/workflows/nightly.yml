@@ -62,7 +62,7 @@ jobs:
         run: |
           source .venv/bin/activate
           xvfb-run pytest ${{ github.event.inputs.pytest_command || '-m "not devRun"' }} \
-            --base-url ${{ vars.BASE_URL }} \
+            --base-url ${{ env.BASE_URL }} \
             --splits ${{ github.event.inputs.parallelism || 2 }} \
             --group ${{ matrix.group }}
       - name: Upload test results and artifacts

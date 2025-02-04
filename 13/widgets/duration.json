@@ -1,0 +1,1 @@
+[{"uid":"75e666583b2d931","name":"Test Accessibility with Default Counts","time":{"start":1738681055608,"stop":1738681055608,"duration":0},"status":"broken","severity":"normal"},{"uid":"adfedbfb0556f926","name":"test_inventory_page[chromium-standard_user]","time":{"start":1738681045571,"stop":1738681045571,"duration":0},"status":"broken","severity":"normal"}]
